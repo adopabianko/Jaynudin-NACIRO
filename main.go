@@ -16,11 +16,8 @@ import (
 )
 
 type DBConfig struct {
-	DB_Host     string
-	DB_Port     int64
-	DB_User     string
-	DB_Password string
-	DB_Name     string
+	DB_Host, DB_User, DB_Password, DB_Name string
+	DB_Port                                int64
 }
 
 type Register struct {
