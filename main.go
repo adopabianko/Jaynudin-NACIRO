@@ -52,6 +52,7 @@ type VerificationAccount struct {
 var err error
 
 func DBConnection() *sql.DB {
+
 	var dbconfig DBConfig
 
 	_, err := toml.DecodeFile(".env.toml", &dbconfig)
@@ -76,6 +77,7 @@ func main() {
 
 	r.HandleFunc("/", IndexPage).Methods("GET")
 	r.HandleFunc("/auth/register", RegisterPage).Methods("POST")
+	r.HandleFunc("/auth/check-user-account", CheckUserAccountPage).Methods("GET")
 	r.HandleFunc("/auth/verification-account", VerificationAccountPage).Methods("POST")
 	r.HandleFunc("/auth/login", LoginPage).Methods("POST")
 
@@ -117,7 +119,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
-		res := map[string]interface{}{"status": "Error", "message": "Server error, unable to create your account.", "data": err.Error()}
+		res := map[string]interface{}{"status": "Error", "message": "Error hash", "data": err.Error()}
 		json, _ := json.Marshal(res)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -256,7 +258,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		defer db.Close()
 
-		res := map[string]interface{}{"status": "Error", "message": err.Error(), "data": nil}
+		res := map[string]interface{}{"status": "Error", "message": "User not found", "data": nil}
 		json, _ := json.Marshal(res)
 
 		w.Header().Set("Content-Type", "application/json")
@@ -269,7 +271,47 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		defer db.Close()
 
+		res := map[string]interface{}{"status": "Error", "message": "User not found", "data": nil}
+		json, _ := json.Marshal(res)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(json)
+		return
+	}
+
+	defer db.Close()
+
+	res := map[string]interface{}{"status": "Ok", "message": "success", "data": nil}
+	json, _ := json.Marshal(res)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(json)
+}
+
+func CheckUserAccountPage(w http.ResponseWriter, r *http.Request) {
+	var countUser int8
+
+	GroupID := r.URL.Query().Get("group_id")
+	Email := r.URL.Query().Get("email")
+
+	db := DBConnection()
+	qAccount := `SELECT count(*) FROM user_accounts WHERE group_id = $1 AND email = $2 AND status = 1`
+	err = db.QueryRow(qAccount, GroupID, Email).Scan(&countUser)
+
+	// if database error or no result data
+	if err != nil {
+		defer db.Close()
+
 		res := map[string]interface{}{"status": "Error", "message": err.Error(), "data": nil}
+		json, _ := json.Marshal(res)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(json)
+		return
+	} else if countUser != 0 {
+		defer db.Close()
+
+		res := map[string]interface{}{"status": "Error", "message": "User already exists", "data": nil}
 		json, _ := json.Marshal(res)
 
 		w.Header().Set("Content-Type", "application/json")
