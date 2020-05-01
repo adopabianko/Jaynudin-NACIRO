@@ -39,8 +39,6 @@ type VerificationAccount struct {
 	VerificationCode string `json:"verification_code"`
 }
 
-var err error
-
 // Default Router
 func IndexPage(w http.ResponseWriter, r *http.Request) {
 	res := map[string]string{"message": "Membership Api", "version": "V.0.0.1"}
@@ -59,7 +57,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	var reg Register
 
 	body, _ := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(body, &reg)
+	err := json.Unmarshal(body, &reg)
 
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
@@ -84,7 +82,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if reg.GroupID == 2 { // Borrower
-		err = registerBorrower(reg.GroupID, reg.Email, hashedPassword, reg.Name, reg.CompanyName, reg.Address, reg.ProvinceID, reg.CityID, reg.PhoneNumber, reg.IdentityType, reg.IdentityFile, reg.NpwpFile, reg.SiupFile)
+		err := registerBorrower(reg.GroupID, reg.Email, hashedPassword, reg.Name, reg.CompanyName, reg.Address, reg.ProvinceID, reg.CityID, reg.PhoneNumber, reg.IdentityType, reg.IdentityFile, reg.NpwpFile, reg.SiupFile)
 
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
@@ -96,7 +94,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if reg.GroupID == 3 { // Investor
-		err = registerInvestor(reg.GroupID, reg.Email, hashedPassword, reg.Name, reg.Gender, reg.BirthDate, reg.JobID, reg.Address, reg.ProvinceID, reg.CityID, reg.PhoneNumber, reg.IdentityType, reg.IdentityFile)
+		err := registerInvestor(reg.GroupID, reg.Email, hashedPassword, reg.Name, reg.Gender, reg.BirthDate, reg.JobID, reg.Address, reg.ProvinceID, reg.CityID, reg.PhoneNumber, reg.IdentityType, reg.IdentityFile)
 
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
@@ -127,7 +125,7 @@ func registerBorrower(groupID int8, email string, password []byte, name string, 
 
 	var userAccountID int
 
-	err = db.QueryRow(qUserAccount, groupID, email, password, verificationCode).Scan(&userAccountID)
+	err := db.QueryRow(qUserAccount, groupID, email, password, verificationCode).Scan(&userAccountID)
 
 	qClient := `INSERT INTO clients
 		(user_account_id, name, company_name, address, province_id, city_id, phone_number, identity_type, identity_file, npwp_file, siup_file)
@@ -150,7 +148,7 @@ func registerInvestor(groupID int8, email string, password []byte, name string, 
 
 	var userAccountID int
 
-	err = db.QueryRow(qUserAccount, groupID, email, password, verificationCode).Scan(&userAccountID)
+	err := db.QueryRow(qUserAccount, groupID, email, password, verificationCode).Scan(&userAccountID)
 
 	qClient := `INSERT INTO clients
 		(user_account_id, name, gender, birth_date, job_id, address, province_id, city_id, phone_number, identity_type, identity_file)
@@ -166,7 +164,7 @@ func VerificationAccountPage(w http.ResponseWriter, r *http.Request) {
 	var va VerificationAccount
 
 	body, _ := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(body, &va)
+	err := json.Unmarshal(body, &va)
 
 	db := cfg.DBConnection()
 	qAccount := `SELECT verification_code FROM user_accounts WHERE verification_code = $1 AND status = 0`
@@ -205,7 +203,7 @@ func LoginPage(w http.ResponseWriter, r *http.Request) {
 	var password []byte
 
 	body, _ := ioutil.ReadAll(r.Body)
-	err = json.Unmarshal(body, &login)
+	err := json.Unmarshal(body, &login)
 
 	db := cfg.DBConnection()
 	qAccount := `SELECT email, password FROM user_accounts WHERE email = $1 AND status = 1`
@@ -252,7 +250,7 @@ func CheckUserAccountPage(w http.ResponseWriter, r *http.Request) {
 
 	db := cfg.DBConnection()
 	qAccount := `SELECT count(*) FROM user_accounts WHERE group_id = $1 AND email = $2 AND status = 1`
-	err = db.QueryRow(qAccount, GroupID, Email).Scan(&countUser)
+	err := db.QueryRow(qAccount, GroupID, Email).Scan(&countUser)
 
 	// if database error or no result data
 	if err != nil {
