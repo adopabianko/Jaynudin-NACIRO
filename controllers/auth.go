@@ -82,7 +82,22 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if reg.GroupID == 2 { // Borrower
-		err := registerBorrower(reg.GroupID, reg.Email, hashedPassword, reg.Name, reg.CompanyName, reg.Address, reg.ProvinceID, reg.CityID, reg.PhoneNumber, reg.IdentityType, reg.IdentityFile, reg.NpwpFile, reg.SiupFile)
+		dataRegisterBorrower := map[string]interface{}{
+			"groupID": reg.GroupID,
+			"email": reg.Email,
+			"password": hashedPassword,
+			"name": reg.Name,
+			"companyName": reg.CompanyName,
+			"address": reg.Address,
+			"provinceID": reg.ProvinceID,
+			"cityID": reg.CityID,
+			"phoneNumber": reg.PhoneNumber,
+			"identityType": reg.IdentityType,
+			"identityFile": reg.IdentityFile,
+			"npwpFile": reg.NpwpFile,
+			"siupFile": reg.SiupFile,
+		} 
+		err = registerBorrower(dataRegisterBorrower)
 
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
@@ -94,7 +109,22 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else if reg.GroupID == 3 { // Investor
-		err := registerInvestor(reg.GroupID, reg.Email, hashedPassword, reg.Name, reg.Gender, reg.BirthDate, reg.JobID, reg.Address, reg.ProvinceID, reg.CityID, reg.PhoneNumber, reg.IdentityType, reg.IdentityFile)
+		dataRegisterInvestor := map[string]interface{}{
+			"groupID": reg.GroupID,
+			"email": reg.Email,
+			"password": hashedPassword,
+			"name": reg.Name,
+			"gender": reg.Gender,
+			"birthDate": reg.BirthDate,
+			"jobID": reg.JobID,
+			"address": reg.Address,
+			"provinceID": reg.ProvinceID,
+			"cityID": reg.CityID,
+			"phoneNumber": reg.PhoneNumber,
+			"identityType": reg.IdentityType,
+			"identityFile": reg.IdentityFile,
+		}
+		err = registerInvestor(dataRegisterInvestor)
 
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
@@ -114,7 +144,7 @@ func RegisterPage(w http.ResponseWriter, r *http.Request) {
 	w.Write(json)
 }
 
-func registerBorrower(groupID int8, email string, password []byte, name string, companyName string, address string, provinceID int, cityID int, phoneNumber string, identityType int8, identityFile string, npwpFile string, siupFile string) error {
+func registerBorrower(dataRegisterBorrower map[string]interface{}) error {
 	var verificationCode string = generateVerificationCode()
 
 	db := cfg.DBConnection()
@@ -125,19 +155,19 @@ func registerBorrower(groupID int8, email string, password []byte, name string, 
 
 	var userAccountID int
 
-	err := db.QueryRow(qUserAccount, groupID, email, password, verificationCode).Scan(&userAccountID)
+	err := db.QueryRow(qUserAccount, dataRegisterBorrower["groupID"], dataRegisterBorrower["email"], dataRegisterBorrower["password"], verificationCode).Scan(&userAccountID)
 
 	qClient := `INSERT INTO clients
 		(user_account_id, name, company_name, address, province_id, city_id, phone_number, identity_type, identity_file, npwp_file, siup_file)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
-	_, err = db.Query(qClient, userAccountID, name, companyName, address, provinceID, cityID, phoneNumber, identityType, identityFile, npwpFile, siupFile)
+	_, err = db.Query(qClient, userAccountID, dataRegisterBorrower["name"], dataRegisterBorrower["companyName"], dataRegisterBorrower["address"], dataRegisterBorrower["provinceID"], dataRegisterBorrower["cityID"], dataRegisterBorrower["phoneNumber"], dataRegisterBorrower["identityType"], dataRegisterBorrower["identityFile"], dataRegisterBorrower["npwpFile"], dataRegisterBorrower["siupFile"])
 	defer db.Close()
 
 	return err
 }
 
-func registerInvestor(groupID int8, email string, password []byte, name string, gender int8, birthDate string, jobID int8, address string, provinceID int, cityID int, phoneNumber string, identityType int8, identityFile string) error {
+func registerInvestor(dataRegisterInvestor map[string]interface{}) error {
 	var verificationCode string = generateVerificationCode()
 
 	db := cfg.DBConnection()
@@ -148,13 +178,13 @@ func registerInvestor(groupID int8, email string, password []byte, name string, 
 
 	var userAccountID int
 
-	err := db.QueryRow(qUserAccount, groupID, email, password, verificationCode).Scan(&userAccountID)
+	err := db.QueryRow(qUserAccount, dataRegisterInvestor["groupID"], dataRegisterInvestor["email"], dataRegisterInvestor["password"], verificationCode).Scan(&userAccountID)
 
 	qClient := `INSERT INTO clients
 		(user_account_id, name, gender, birth_date, job_id, address, province_id, city_id, phone_number, identity_type, identity_file)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 
-	_, err = db.Query(qClient, userAccountID, name, gender, birthDate, jobID, address, provinceID, cityID, phoneNumber, identityType, identityFile)
+	_, err = db.Query(qClient, userAccountID, dataRegisterInvestor["name"], dataRegisterInvestor["gender"], dataRegisterInvestor["birthDate"], dataRegisterInvestor["jobID"], dataRegisterInvestor["address"], dataRegisterInvestor["provinceID"], dataRegisterInvestor["cityID"], dataRegisterInvestor["phoneNumber"], dataRegisterInvestor["identityType"], dataRegisterInvestor["identityFile"])
 	defer db.Close()
 
 	return err
