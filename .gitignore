@@ -1,3 +1,4 @@
 /vendor/
 .env.toml
 p2pauth
+.idea
