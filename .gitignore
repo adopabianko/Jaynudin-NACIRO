@@ -1,4 +1,4 @@
 /vendor/
-.env.toml
+.app-config.yaml
 p2pauth
 .idea

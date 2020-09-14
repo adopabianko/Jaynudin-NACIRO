@@ -1,0 +1,6 @@
+db:
+  host: "127.0.0.1"
+  port: 5432
+  name: "p2p_auth"
+  user: "root"
+  password: "secret"
